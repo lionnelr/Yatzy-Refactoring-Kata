@@ -1,241 +1,177 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 public class Yatzy {
 
-    public static int chance(int d1, int d2, int d3, int d4, int d5)
-    {
-        int total = 0;
-        total += d1;
-        total += d2;
-        total += d3;
-        total += d4;
-        total += d5;
-        return total;
+    public static int chance(int d1, int d2, int d3, int d4, int d5) {
+        return d1 + d2 + d3 + d4 + d5;
     }
 
-    public static int yatzy(int... dice)
-    {
-        int[] counts = new int[6];
-        for (int die : dice)
-            counts[die-1]++;
-        for (int i = 0; i != 6; i++)
-            if (counts[i] == 5)
+    public static int yatzy(int... dice) {
+        Map<Integer, Integer> mp = createMapWithOccurences(dice);
+        for (Map.Entry<Integer, Integer> entry : mp.entrySet()) {
+            if (entry.getValue() == 5)
                 return 50;
+        }
         return 0;
     }
 
     public static int ones(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 1) sum++;
-        if (d2 == 1) sum++;
-        if (d3 == 1) sum++;
-        if (d4 == 1) sum++;
-        if (d5 == 1) 
-            sum++;
-
-        return sum;
+        return countOccurences(new int[]{d1, d2, d3, d4, d5}, 1);
     }
 
     public static int twos(int d1, int d2, int d3, int d4, int d5) {
-        int sum = 0;
-        if (d1 == 2) sum += 2;
-        if (d2 == 2) sum += 2;
-        if (d3 == 2) sum += 2;
-        if (d4 == 2) sum += 2;
-        if (d5 == 2) sum += 2;
-        return sum;
+        return countOccurences(new int[]{d1, d2, d3, d4, d5}, 2);
     }
 
     public static int threes(int d1, int d2, int d3, int d4, int d5) {
-        int s;    
-        s = 0;
-        if (d1 == 3) s += 3;
-        if (d2 == 3) s += 3;
-        if (d3 == 3) s += 3;
-        if (d4 == 3) s += 3;
-        if (d5 == 3) s += 3;
-        return s;
+        return countOccurences(new int[]{d1, d2, d3, d4, d5}, 3);
     }
 
     protected int[] dice;
-    public Yatzy(int d1, int d2, int d3, int d4, int _5)
-    {
-        dice = new int[5];
-        dice[0] = d1;
-        dice[1] = d2;
-        dice[2] = d3;
-        dice[3] = d4;
-        dice[4] = _5;
+
+    public Yatzy(int d1, int d2, int d3, int d4, int _5) {
+        this.dice = new int[]{d1, d2, d3, d4, _5};
     }
 
-    public int fours()
-    {
-        int sum;    
-        sum = 0;
-        for (int at = 0; at != 5; at++) {
-            if (dice[at] == 4) {
-                sum += 4;
+    public int fours() {
+        return countOccurences(dice, 4);
+    }
+
+    public int fives() {
+        return countOccurences(dice, 5);
+    }
+
+    public int sixes() {
+        return countOccurences(dice, 6);
+    }
+
+    public static int score_pair(int d1, int d2, int d3, int d4, int d5) {
+        int max = 0;
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        for (Map.Entry<Integer, Integer> entry : mp.entrySet()) {
+            if (entry.getValue() >= 2) {
+                if (entry.getKey() * entry.getValue() > max) {
+                    max = entry.getKey() * entry.getValue();
+                }
             }
+        }
+        return max;
+    }
+
+    public static int two_pair(int d1, int d2, int d3, int d4, int d5) {
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        return calculateKind(mp, 2, false);
+    }
+
+    public static int four_of_a_kind(int _1, int _2, int d3, int d4, int d5) {
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{_1, _2, d3, d4, d5});
+        return calculateKind(mp, 4, false);
+    }
+
+    public static int three_of_a_kind(int d1, int d2, int d3, int d4, int d5) {
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        return calculateKind(mp, 3, false);
+    }
+
+    public static int smallStraight(int d1, int d2, int d3, int d4, int d5) {
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        // On effectue une recherche sur des nombres données et on vérifie si la
+        // taille en sortie correspond
+        if (mp.keySet().stream()
+                .filter(key -> key.intValue() == 1 || key.intValue() == 2
+                        || key.intValue() == 3 || key.intValue() == 4
+                        || key.intValue() == 5)
+                .collect(Collectors.toList()).size() == 5) {
+            return 15;
+        } else {
+            return 0;
+        }
+    }
+
+    public static int largeStraight(int d1, int d2, int d3, int d4, int d5) {
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        if (mp.keySet().stream()
+                .filter(key -> key.intValue() == 2 || key.intValue() == 3
+                        || key.intValue() == 4 || key.intValue() == 5
+                        || key.intValue() == 6)
+                .collect(Collectors.toList()).size() == 5) {
+            return 20;
+        } else {
+            return 0;
+        }
+    }
+
+    public static int fullHouse(int d1, int d2, int d3, int d4, int d5) {
+        int returnValue = 0;
+        Map<Integer, Integer> mp = createMapWithOccurences(
+                new int[]{d1, d2, d3, d4, d5});
+        if (mp.size() == 2) {
+            if (mp.containsValue(2) && mp.containsValue(3)) {
+                returnValue += calculateKind(mp, 2, true);
+                returnValue += calculateKind(mp, 3, true);
+            }
+        }
+        return returnValue;
+    }
+
+    // Méthode permettant de compter le nombre d'occurences dans un tableau
+    // selon un nombre passé en paramètre
+    private static int countOccurences(int[] ints, int number) {
+        int sum = 0;
+        for (int i : ints) {
+            if (i == number)
+                sum += number;
         }
         return sum;
     }
 
-    public int fives()
-    {
-        int s = 0;
-        int i;
-        for (i = 0; i < dice.length; i++) 
-            if (dice[i] == 5)
-                s = s + 5;
-        return s;
-    }
-
-    public int sixes()
-    {
-        int sum = 0;
-        for (int at = 0; at < dice.length; at++) 
-            if (dice[at] == 6)
-                sum = sum + 6;
-        return sum;
-    }
-
-    public static int score_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int at;
-        for (at = 0; at != 6; at++)
-            if (counts[6-at-1] >= 2)
-                return (6-at)*2;
-        return 0;
-    }
-
-    public static int two_pair(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] counts = new int[6];
-        counts[d1-1]++;
-        counts[d2-1]++;
-        counts[d3-1]++;
-        counts[d4-1]++;
-        counts[d5-1]++;
-        int n = 0;
-        int score = 0;
-        for (int i = 0; i < 6; i += 1)
-            if (counts[6-i-1] >= 2) {
-                n++;
-                score += (6-i);
-            }        
-        if (n == 2)
-            return score * 2;
-        else
-            return 0;
-    }
-
-    public static int four_of_a_kind(int _1, int _2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[_1-1]++;
-        tallies[_2-1]++;
-        tallies[d3-1]++;
-        tallies[d4-1]++;
-        tallies[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (tallies[i] >= 4)
-                return (i+1) * 4;
-        return 0;
-    }
-
-    public static int three_of_a_kind(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] t;
-        t = new int[6];
-        t[d1-1]++;
-        t[d2-1]++;
-        t[d3-1]++;
-        t[d4-1]++;
-        t[d5-1]++;
-        for (int i = 0; i < 6; i++)
-            if (t[i] >= 3)
-                return (i+1) * 3;
-        return 0;
-    }
-
-    public static int smallStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[0] == 1 &&
-            tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1)
-            return 15;
-        return 0;
-    }
-
-    public static int largeStraight(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-        if (tallies[1] == 1 &&
-            tallies[2] == 1 &&
-            tallies[3] == 1 &&
-            tallies[4] == 1
-            && tallies[5] == 1)
-            return 20;
-        return 0;
-    }
-
-    public static int fullHouse(int d1, int d2, int d3, int d4, int d5)
-    {
-        int[] tallies;
-        boolean _2 = false;
-        int i;
-        int _2_at = 0;
-        boolean _3 = false;
-        int _3_at = 0;
-
-
-
-
-        tallies = new int[6];
-        tallies[d1-1] += 1;
-        tallies[d2-1] += 1;
-        tallies[d3-1] += 1;
-        tallies[d4-1] += 1;
-        tallies[d5-1] += 1;
-
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 2) {
-                _2 = true;
-                _2_at = i+1;
+    // Méthode permettant de créer une map en comptant le nombre d'occurences
+    // trouvée pour chaque nombre trouvé
+    private static Map<Integer, Integer> createMapWithOccurences(int[] ints) {
+        // On remplit la map et on compte les occurences de chaque nombre
+        Map<Integer, Integer> mp = new HashMap<>();
+        for (int i : ints) {
+            if (mp.containsKey(i)) {
+                mp.put(i, mp.get(i) + 1);
+            } else {
+                mp.put(i, 1);
             }
+        }
+        return mp;
+    }
 
-        for (i = 0; i != 6; i += 1)
-            if (tallies[i] == 3) {
-                _3 = true;
-                _3_at = i+1;
+    /**
+     * Méthode permettant de calculer le produit entre clé et valeur
+     * 
+     * @param map
+     * @param occurence
+     * @param strictMode
+     *            : flag permettant de savoir si on calcule en fonction de la
+     *            valeur dans la map ou pas
+     * @return
+     */
+    private static int calculateKind(Map<Integer, Integer> map, int occurence,
+            boolean strictMode) {
+        int returnValue = 0;
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            if (!strictMode) {
+                if (entry.getValue() >= occurence) {
+                    returnValue += entry.getKey() * occurence;
+                }
+            } else {
+                if (entry.getValue() == occurence) {
+                    returnValue += entry.getKey() * entry.getValue();
+                }
             }
-
-        if (_2 && _3)
-            return _2_at * 2 + _3_at * 3;
-        else
-            return 0;
+        }
+        return returnValue;
     }
 }
-
-
-
